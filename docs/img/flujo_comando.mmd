@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant A as Adafruit IO<br/>dashboard
+    participant N as Backend<br/>nube.py
+    participant B as Backend<br/>main.py
+    participant D as SQLite
+    participant H as HiveMQ
+    participant C as ESP32<br/>controlador.py
+    participant R as Relé / LED
+
+    U->>A: toggle "bomba" = ON
+    A->>N: MQTT {usuario}/feeds/bomba "ON"
+    N->>N: ¿valor viejo al arrancar? → ignorar<br/>traducir_comando("bomba","ON")
+    N->>B: on_comando("bomba","ON")
+    B->>D: INSERT comandos (resultado = ENVIADO) → id
+    B->>H: {prefijo}/comandos {"cmd":"bomba","valor":"ON","origen":"adafruit_io","id":7}
+    H->>C: callback MQTT
+    alt modo MANUAL
+        C->>R: Pin(26) = 1 → COM-NO cierra, LED azul ON
+        C->>H: {prefijo}/eventos RIEGO_INICIADO + {prefijo}/estado
+        C->>H: {prefijo}/comandos/ack resultado = OK
+    else modo AUTO
+        C->>H: {prefijo}/comandos/ack resultado = IGNORADO_MODO_AUTO
+    end
+    H->>B: ACK
+    B->>D: UPDATE comandos SET resultado = ... WHERE id = 7
+    B->>A: feed estado "MANUAL | Bomba ON | ..."

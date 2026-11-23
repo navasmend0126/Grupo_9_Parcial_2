@@ -1,0 +1,27 @@
+# =====================================================================
+# Dependencias del BACKEND (CPython 3.10+). Instalar con:
+#     pip install -r requirements.txt
+# El firmware del ESP32 (wokwi/) NO usa pip: corre con los módulos
+# incluidos en MicroPython (machine, dht, network, umqtt.simple, framebuf).
+# =====================================================================
+
+# Cliente MQTT del backend hacia HiveMQ (backend/mqtt_bridge.py) y del
+# simulador del dispositivo. Se usa la API de callbacks v2.
+paho-mqtt==2.2.0
+
+# Librería oficial de Adafruit IO: conexión MQTT/TLS, publicación de los
+# feeds del dashboard y recepción de comandos (backend/nube.py).
+adafruit-io==3.0.0
+
+# Carga AIO_USERNAME, AIO_KEY y el resto de la configuración desde .env
+# para no escribir credenciales en el código (backend/config.py).
+python-dotenv==1.2.4
+
+# --- Desarrollo / pruebas --------------------------------------------
+# Pruebas automáticas de la BD, las consultas, la traducción de comandos
+# y la lógica del controlador sin hardware (carpeta tests/).
+pytest==9.2.0
+
+# Módulos de la biblioteca estándar usados (no requieren instalación):
+# sqlite3 (persistencia), logging (registro), argparse (CLI historico.py),
+# threading/signal (cierre limpio con Ctrl+C).

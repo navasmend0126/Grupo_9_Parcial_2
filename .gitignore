@@ -1,0 +1,22 @@
+# Credenciales
+.env
+
+# Base de datos y logs generados en ejecución
+*.db
+*.db-journal
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Editores / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

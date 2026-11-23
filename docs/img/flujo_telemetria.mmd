@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    participant S as Sensores<br/>(DHT22, LDR, pot.)
+    participant C as ESP32<br/>controlador.py
+    participant H as HiveMQ
+    participant B as Backend<br/>main.py
+    participant D as SQLite
+    participant A as Adafruit IO
+
+    loop cada 2 s (temporizador no bloqueante)
+        C->>S: leer()
+        S-->>C: temp, hum, luz, suelo
+        C->>C: aplicar reglas AUTO + evaluar crítico
+        opt cambió un actuador o la condición crítica
+            C->>H: {prefijo}/eventos (RIEGO_INICIADO, CRITICO, ...)
+            C->>H: {prefijo}/estado
+            H->>B: evento / estado
+            B->>D: INSERT INTO eventos
+            B->>A: feed estado (solo si cambió el texto)
+        end
+    end
+    loop cada 15 s
+        C->>H: {prefijo}/telemetria {"temperatura":..,"humedad":..,"luz":..,"suelo":..,"ts":..}
+        H->>B: telemetría
+        B->>D: INSERT INTO lecturas (4 filas, una por sensor)
+        B->>A: feeds temperatura, humedad, luz, suelo (limitador ≤ 25/min)
+        A-->>A: el dashboard se actualiza en tiempo real
+    end

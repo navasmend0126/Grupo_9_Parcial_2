@@ -1,0 +1,46 @@
+flowchart LR
+    subgraph DISP["Capa de percepción y control · ESP32 (Wokwi, MicroPython)"]
+        direction TB
+        S1["DHT22<br/>temp + humedad<br/>GPIO15"]
+        S2["LDR (AO)<br/>luz · GPIO34 ADC1"]
+        S3["Potenciómetro<br/>suelo · GPIO35 ADC1"]
+        CTRL["controlador.py<br/>AUTO / MANUAL<br/>bus de eventos"]
+        A1["Relé bomba + LED azul<br/>GPIO26"]
+        A2["Relé ventilador + LED amarillo<br/>GPIO27"]
+        A3["LED luz de cultivo<br/>GPIO25"]
+        A4["Buzzer PWM<br/>GPIO14"]
+        A5["OLED SSD1306<br/>I2C 21/22"]
+        RED["red.py<br/>WiFi + umqtt.simple"]
+        S1 & S2 & S3 --> CTRL
+        CTRL --> A1 & A2 & A3 & A4 & A5
+        CTRL <--> RED
+    end
+
+    BROKER(["Broker MQTT público<br/>broker.hivemq.com:1883<br/>prefijo utp/omar/invernadero"])
+
+    subgraph PC["Capa de procesamiento · Backend Python (PC)"]
+        direction TB
+        PUENTE["mqtt_bridge.py<br/>paho-mqtt v2"]
+        SERV["main.py<br/>ServicioInvernadero"]
+        NUBE["nube.py<br/>adafruit-io + limitador 25/min"]
+        DB[("SQLite<br/>lecturas · eventos · comandos")]
+        HIST["historico.py<br/>CLI de consultas"]
+        PUENTE <--> SERV
+        SERV --> DB
+        SERV <--> NUBE
+        HIST --> DB
+    end
+
+    subgraph CLOUD["Capa de aplicación · Adafruit IO"]
+        direction TB
+        FEEDS["Feeds: temperatura, humedad,<br/>luz, suelo, estado"]
+        CMDS["Feeds de comando: modo, bomba,<br/>ventilador, umbral-temp"]
+        DASH["Dashboard en tiempo real"]
+        FEEDS --> DASH
+        DASH --> CMDS
+    end
+
+    RED <-->|"telemetria · estado · eventos · ack ↑<br/>comandos ↓"| BROKER
+    BROKER <--> PUENTE
+    NUBE <-->|"MQTT/TLS 8883<br/>credenciales solo en .env"| FEEDS
+    NUBE <--> CMDS
