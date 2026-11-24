@@ -20,3 +20,4 @@ venv/
 .idea/
 Thumbs.db
 .DS_Store
+docs/explicacion_sistema.pdf
